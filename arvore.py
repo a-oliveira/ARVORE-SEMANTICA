@@ -30,6 +30,12 @@ class NodoArvore:
             self.direita = noFilho
 
 
+def replaceImplicacao(valor, inicioImplicacao, fimImplicacao):
+    valor = valor.replace(inicioImplicacao+"-"+fimImplicacao,
+                          " not(" + inicioImplicacao + ") or " + fimImplicacao)
+    return valor
+
+
 def calculaFormula(formula, simbolo, interpretacao):
 
     valor = formula.replace(simbolo, interpretacao)
@@ -40,25 +46,32 @@ def calculaFormula(formula, simbolo, interpretacao):
 
     else:
         valor = valor.replace("v", " or ")
-        valor = valor.replace("^", " and ")
+        #valor = valor.replace("^", " and ")
         valor = valor.replace("=", " == ")
 
+        if "^" in valor:
+            e = valor.split("^")
+            valor = valor.replace(e[0], "("+e[0]+")")
+            #valor = valor.replace(e[1], e[1]+")")
+            valor = valor.replace("^", " and ")
+            print("valor")
+
         if "-" in valor:  # só faz isso se achar implicação, senão dá erro de
-
             implicacao = valor.split("-")
+            while len(implicacao) > 1:
+                try:
+                    inicioImplicacao = implicacao[0].split(
+                        "(")[-1]  # pega td depois dos parênteses abertos
+                    # pega td antes dos parênteses fechados
+                    fimImplicacao = implicacao[1].split(")")[0]
+                    valor = replaceImplicacao(
+                        valor, inicioImplicacao, fimImplicacao)
+                except:
+                    valor = replaceImplicacao(
+                        valor, implicacao[0], implicacao[1])
 
-            try:
-                # se a implicação estiver entre parênteses faça:
-
-                inicioImplicacao = implicacao[0].split("(")[-1]
-                # pega o conteúdo todo antes do parênteses fechado
-                fimImplicacao = implicacao[1].split(")")[0]
-                print("TO AQUI", inicioImplicacao, fimImplicacao)
-                valor = valor.replace(
-                    inicioImplicacao+"-"+fimImplicacao, " not(" + inicioImplicacao + ") or " + fimImplicacao)
-            except:
-                valor = valor.replace(
-                    implicacao[0]+"-"+implicacao[1], " not(" + implicacao[0] + ") or " + implicacao[1])
+                implicacao = valor.split("-")
+               # print("formula agora tá assim: ", valor)
 
         if "~" in valor:
             negacao = formula.split("~")
@@ -107,3 +120,5 @@ if __name__ == "__main__":
     # not(True) or (not(False) or True) and False
     print(calculaFormula(FORMULA_TESTE, "P", "True"))
     print(calculaFormula(IMPLICACAO, "P", "True"))
+    print("((not(True) or (not(False) or (not(True) or True)) and False))", ((not(True) or (
+        not(False) or (not(True) or True)) and False)))
